@@ -1,0 +1,1 @@
+Content created from watching videos from Jim Bagley's YouTube channel; https://www.youtube.com/channel/UCEhXaSI0kIdxsHnmgex3FvQ.  Files are meant to be deplyed onto the SD Image for the Spectrum NEXT computer (z80).
