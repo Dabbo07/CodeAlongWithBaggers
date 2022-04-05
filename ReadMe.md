@@ -2,9 +2,9 @@
 ## _A Spectrum Next Tutorial YouTube Series by Jim Bagley_
 This is a collection of files created for each episode from his tutorial series found here:   <https://www.youtube.com/channel/UCEhXaSI0kIdxsHnmgex3FvQ>
 
-They cover Z80 assembly basics, the NEXT sprite editor (created by Jim himself) and NEXT BASIC, with the primary focus on writing you first z80 assembly game on the ZX Spectrum NEXT.
+They cover Z80 assembly, the NEXT sprite editor (created by Jim himself) and NEXT BASIC, with the primary focus on writing your first z80 assembly game on the ZX Spectrum NEXT.
 
-Not all code will be 100% identical to Jim's videos as I have added my own style and improvements, however, they should be useful to reference oe debug against whilst watching the videos.  Each folder represents the state of the code at the end of each episode, which should be suitable starting point for the following episode.
+Not all code will be 100% identical to Jim's videos as I have added my own style and improvements, however, they should be useful to reference or debug against whilst watching the videos.  Each folder represents the state of the code at the end of each episode, which should be suitable starting point for the following episode.
 
 ## Usage
 Once you have cloned the project, copy the contents onto a NEXT SD Card or image file (_if using the CSpect emulator with mounted SD card image_).  You should then be able to access the files on the NEXT and run them without issue, hopefully.
