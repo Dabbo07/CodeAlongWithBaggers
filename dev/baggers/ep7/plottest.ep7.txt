@@ -1,0 +1,177 @@
+; CodeAlongWithBaggers Episode 7
+
+; Defines
+TURBO_SPEED                     EQU $07
+SPEED_3_5_MHZ                   EQU $00
+SPEED_7_MHZ                     EQU $01
+SPEED_14_MHZ                    EQU $02
+SPEED_28_MHZ                    EQU $03
+
+SPR_SELECT_REG                  EQU $34
+SPR_X_VALUE_REG                 EQU $35
+SPR_Y_VALUE_REG                 EQU $36
+SPR_X_MSB_FLIP_REG              EQU $37
+SPR_PATTERN_REG                 EQU $38
+SPR_ATTRIBUTES_REG              EQU $39
+
+SPR_X_VALUE_REG_INC             EQU $75
+SPR_Y_VALUE_REG_INC             EQU $76
+SPR_X_MSB_FLIP_REG_INC          EQU $77
+SPR_PATTERN_REG_INC             EQU $78
+SPR_ATTRIBUTES_REG_INC          EQU $79
+
+Z80_DMA_DATAGEAR_PORT           EQU $6B
+SPR_IMAGE_PORT                  EQU $5B
+DMA_LOAD                        EQU $CF
+DMA_DISABLE                     EQU $83
+DMA_ENABLE                      EQU $87
+
+SPR_LAYER_CONTROL_REG           EQU $15
+
+; Game Code
+start
+        NREG TURBO_SPEED,SPEED_3_5_MHZ
+        LD   A,0
+        LD   (xpos),A
+        LD   (ypos),A
+        LD   A,$55
+        LD   ($4000),A
+
+; Setup Sprites
+        LD   HL,sprites
+        LD   BC,$4000
+        LD   A,0
+        CALL DMASprites
+        NREG SPR_LAYER_CONTROL_REG,%0_0_0_000_0_1
+             ; LowRes, SprPriority, BorderClip, Order, OverBorder, Priorities,
+             ;   Visible
+
+; Game Loop
+loop
+        NREG SPR_SELECT_REG,0
+        LD   A,(xpos)
+        LD   E,A
+        LD   D,0
+        ADD  DE,32
+        LD   A,(ypos)
+        ADD  A,32
+        LD   L,A
+        LD   C,%0_0_000000    ;Visible,EnableAttribute,ImgNo 0-63
+        LD   B,%0000_0_0_0_0  ;ColorOffsets,XFlip,YFlip,Rotate,X8 MSB X
+        LD   H,%0_0_0_00_00_0 ;4Bit,ImgLSB,TRelative,XScale,YScale,Y8 MSB Y
+        CALL addsprite
+        CALL delay
+        LD   A,(xpos)
+        LD   E,A
+        LD   A,(ypos)
+        LD   D,A
+        ;CALL plot
+
+        LD   BC,$fbfe
+        IN   A,(C)
+        BIT  0,A
+        JR   NZ,notq
+        DEC  D
+notq
+        LD   BC,$fdfe
+        IN   A,(C)
+        BIT  0,A
+        JR   NZ,nota
+        INC  D
+nota
+        LD   BC,$dffe
+        IN   A,(C)
+        BIT  1,A
+        JR   NZ,noto
+        DEC  E
+noto
+        LD   BC,$dffe
+        IN   A,(C)
+        BIT  0,A
+        JR   NZ,notp
+        INC  E
+notp
+        LD   A,E
+        LD   (xpos),A
+        LD   A,D
+        LD   (ypos),A
+        LD   BC,$7ffe
+        IN   A,(C)
+        BIT  0,A
+        RET  Z
+        JP   loop
+
+plot
+        LD   A,D
+        CP   192
+        RET  NC
+        PXAD
+        STAE
+        OR   (HL)
+        LD   (HL),A
+        RET
+
+delay
+        LD   HL,3000
+dellp
+        DEC  HL
+        LD   A,H
+        OR   L
+        JR   NZ,dellp
+        RET
+
+; DE=SpriteX L=SpriteY C=SpriteImg B=FlipBits H=Attributes
+addsprite
+        LD   A,E
+        NREG SPR_X_VALUE_REG,A
+        LD   A,L
+        NREG SPR_Y_VALUE_REG,A
+        LD   A,D
+        AND  1
+        OR   B
+        NREG SPR_X_MSB_FLIP_REG,A
+        LD   A,C
+        OR   $C0
+        NREG SPR_PATTERN_REG,A
+        LD   A,H
+        NREG SPR_ATTRIBUTES_REG_INC,A
+        RET
+
+DMASprites
+        NREG SPR_SELECT_REG,A
+        LD   (DMAsrcS),HL
+        LD   (DMAlenS),BC
+        LD   HL,DMAcodeS
+        LD   B,DMAcodelenS
+        LD   C,Z80_DMA_DATAGEAR_PORT
+        OTIR
+        RET
+
+DMAcodeS
+        DB   DMA_DISABLE
+        DB   %01111101
+
+DMAsrcS
+        DW   0
+DMAlenS
+        DW   0
+        DB   %01010100
+        DB   %00000010
+        DB   %01101000
+        DB   %00000010
+        DB   %10101101
+        DW   SPR_IMAGE_PORT
+        DB   %10000010
+        DB   DMA_LOAD
+        DB   DMA_ENABLE
+
+DMAcodelenS EQU $-DMAcodeS
+
+xpos
+        DB   0
+ypos
+        DB   0
+
+sprites
+        BIN  "img/myspr.spr"
+
